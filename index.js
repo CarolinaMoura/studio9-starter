@@ -23,6 +23,8 @@ createApp({
         },
         channels,
       });
+      this.myMessage = "";
+      this.getMessages();
     },
 
     getMessages() {
@@ -35,7 +37,7 @@ createApp({
 
       // Sort here
 
-      this.messageObjects = newMessageObjects;
+      this.messageObjects = toSorted(newMessageObjects, (msg1, msg2) => {msg1.published-msg2.published});
     },
 
     *getMessageObjectsIterator() {

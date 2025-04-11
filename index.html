@@ -32,7 +32,7 @@
                         v-model="myMessage"
                         placeholder="Message"
                     />
-                    <input type="submit" value="Send" />
+                    <input type="submit" value="Send" :disabled="!myMessage" />
                 </form>
             </template>
 
