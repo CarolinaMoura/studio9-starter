@@ -14,41 +14,61 @@ createApp({
     };
   },
 
+  mounted() {
+    this.getMessages();
+  },
+
   methods: {
-    sendMessage(session) {
-      this.sentMessageObjects.push({
-        value: {
-          content: this.myMessage,
-          published: Date.now(),
+    async sendMessage(session) {
+      for (const obj of document.querySelectorAll(".load_sending")) {
+        obj.classList.remove("load_sending_hidden");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      for (const obj of document.querySelectorAll(".load_sending")) {
+        obj.classList.add("load_sending_hidden");
+      }
+
+      await this.$graffiti.put(
+        {
+          value: {
+            content: this.myMessage,
+            published: Date.now(),
+          },
+          channels,
         },
-        channels,
-      });
+        session,
+      );
       this.myMessage = "";
       this.getMessages();
     },
 
-    getMessages() {
-      const messageObjectsIterator = this.getMessageObjectsIterator();
+    async getMessages() {
+      const messageObjectsIterator = await this.$graffiti.discover(channels, {
+        value: {
+          properties: {
+            content: { type: "string" },
+            published: { type: "number" },
+            author: { type: "string" },
+          },
+        },
+      });
+
 
       const newMessageObjects = [];
-      for (const { object } of messageObjectsIterator) {
+      for await (const { object } of messageObjectsIterator) {
         newMessageObjects.push(object);
+        console.log(object);
       }
 
       // Sort here
 
-      this.messageObjects = toSorted(newMessageObjects, (msg1, msg2) => {msg1.published-msg2.published});
+      this.messageObjects = newMessageObjects.toSorted((msg1, msg2) => { msg1.published - msg2.published });
     },
 
-    *getMessageObjectsIterator() {
-      for (const object of this.sentMessageObjects) {
-        yield { object };
-      }
-    },
   },
 })
   .use(GraffitiPlugin, {
-    graffiti: new GraffitiLocal(),
+    graffiti: new GraffitiRemote(),
     // graffiti: new GraffitiRemote(),
   })
   .mount("#app");
